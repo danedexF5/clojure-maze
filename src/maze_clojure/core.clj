@@ -8,7 +8,7 @@
     (for [row (range size)]
       (vec
         (for [col (range size)]
-          {:row row, :col col, :visited? false, :bottom? true, :right? true :start? false})))))
+          {:row row, :col col, :visited? false, :bottom? true, :right? true :start? false :end? false})))))
 
 (defn possible-neighbors [rooms row col]
   (vec
@@ -62,7 +62,10 @@
           (if (= old-rooms new-rooms)
             old-rooms
             (recur new-rooms))))
-      rooms)))
+      (if (< (count (filter :end? (flatten rooms))) 1)
+        (assoc-in rooms [row col :end?] true)
+        rooms))))
+
 
 (defn print-room [room]
   ; changes based on start / bottom
@@ -78,20 +81,26 @@
   (if (:right? room)
     (print "|")
     (print " ")))
+
 ; if we have bottom and it is a start then ⍜
-; if we have a bottom and it's not a start them " "
 ; if we have NO bottom and it is a start then o
-(defn -main []
-  (let [
-        rooms (create-rooms)
-        maze (create-maze rooms 0 0 true)]
+
+(defn -main [& args]
+  (let [rooms (create-rooms)
+        rooms (create-maze rooms 0 0 true)]
     ; print top walls
-    (doseq [_ maze]
+    (doseq [row rooms]
       (print " _"))
     (println)
     ; print grid
-    (doseq [row maze]
+    (doseq [row rooms]
+      ;print walls
       (print "|")
       (doseq [room row]
-        (print-room room))
+        ;eliminated previous conditional, added one here
+        (print (str (cond
+                      (:start? room) "o" (:end? room) "x"
+                      (:bottom? room) "_" :else " ")
+                    (if (:right? room) "|" " "))))
       (println))))
+
